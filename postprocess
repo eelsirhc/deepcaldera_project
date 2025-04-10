@@ -1,0 +1,11 @@
+#combine the tables and deduplicate
+python scripts/postprocess.py combine --output caldera_positive.csv
+python scripts/postprocess.py combine --negative --output caldera_negative.csv
+
+#for the top features, calculate metadata
+python scripts/postprocess.py segment caldera_negative.csv 0 0 --preload --negative
+python scripts/postprocess.py segment caldera_positive.csv 0 0 --preload
+
+#finalize the csv and hdf files
+python scripts/postprocess.py final --negative
+python scripts/postprocess.py final
