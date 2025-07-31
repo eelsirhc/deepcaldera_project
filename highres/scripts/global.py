@@ -1,4 +1,4 @@
-# %load start_to_finish.py
+#Generate the high resolution imagery from 1-1.587 degrees / box
 import time
 import deepmars2.post_processing_net.model as ppn
 from keras.callbacks import TensorBoard, ModelCheckpoint
@@ -106,9 +106,9 @@ def UNET_predictions():
                          min_lat=min_lat, max_lat=max_lat, min_long=min_long, max_long=max_long,
                              project=True, amount=STEP)
    
-            if do_DEM:
-                print('Making Predictions (IR and DEM) {}'.format(start_index), flush=True)
-                Popen(["./cnn_ir_dem.bash",str(start_index)])
+#            if do_DEM:
+#                print('Making Predictions (IR and DEM) {}'.format(start_index), flush=True)
+#                Popen(["./cnn_ir_dem.bash",str(start_index)])
 
 
 UNET_predictions()

@@ -20,9 +20,9 @@ import cratertools.metric as metric
 import sys
 import rasterio
 
-min_box_size = 1
-max_box_size = 1.587
-n_box_sizes = 3
+min_box_size = 2
+max_box_size = 30
+n_box_sizes = 20
 min_lat = -90
 max_lat = 90
 #min_box_size = 5
@@ -96,7 +96,7 @@ def UNET_predictions():
 
     for i in range(n_files):
         start_index = i * STEP
-        do_DEM = not os.path.isfile('./data/negative_predictions/DEM/sys_cal_craterdist_{:05d}.npy'.format(start_index))
+        do_DEM = not os.path.isfile('./data/predictions/DEM/sys_cal_craterdist_{:05d}.npy'.format(start_index))
         # Generate images
         
         if do_DEM:
@@ -106,9 +106,9 @@ def UNET_predictions():
                          min_lat=min_lat, max_lat=max_lat, min_long=min_long, max_long=max_long,
                              project=True, amount=STEP)
    
-            if do_DEM:
-                print('Making Predictions (IR and DEM) {}'.format(start_index), flush=True)
-                Popen(["./cnn_ir_dem_negative.bash",str(start_index)])
+#            if do_DEM:
+#                print('Making Predictions (IR and DEM) {}'.format(start_index), flush=True)
+#                Popen(["./cnn_ir_dem.bash",str(start_index)])
 
 
 UNET_predictions()
