@@ -1,3 +1,6 @@
 [submodule "deepmars2"]
 	path = deepmars2
 	url = git@github.com:eelsirhc/deepcaldera.git
+[submodule "cratertools"]
+	path = cratertools
+	url = https://github.com/utplanets/cratertools.git
