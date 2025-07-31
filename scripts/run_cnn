@@ -1,3 +1,6 @@
+# a simple script to run the CNN UNET code on the caldera.
+# Takes the resolution as the input variable (highres or lowres) and finds all of files available
+
 resolution=$1
 
 for index in `find $resolution/data/processed -name '*images*' -printf '%P\n' | xargs -I{} basename {} .hdf5 | awk -F_ '{print $4}' | sort -n`

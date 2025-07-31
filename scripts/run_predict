@@ -1,3 +1,6 @@
+# a simple script to run the prediction code on the caldera.
+# Takes the resolution as the input variable (highres or lowres) and finds all of files available
+
 resolution=$1
 
 rm -f runfile
