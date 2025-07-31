@@ -1,5 +1,22 @@
+Install
 
-Steps
+1. Clone this repository
+2. in the repository, update the submodules
+   git submodule init
+   git submodule update
+3. setup virtual environment
+      python -m venv .deepcaldera
+4. activate the environment
+     source .deepcaldera/bin/activate
+5. install cratertools
+     cd cratertools ; pip install . ; cd ..
+6. install the requirements
+    pip install -r requirements.txt
+    
+  
+   
+
+Running
 
 1. Generate a set of images
 	lowres/scripts/global.py -> generate many images by sampling the global map and storing samples in files with 1000 samples each
