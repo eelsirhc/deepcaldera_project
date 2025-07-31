@@ -1,0 +1,7 @@
+resolution=$1
+
+for index in `find $resolution/data/processed -name '*images*' -printf '%P\n' | xargs -I{} basename {} .hdf5 | awk -F_ '{print $4}' | sort -n`
+do
+    echo $index
+    python ./res_predict_model.py cnn-prediction --index=$index --prefix=sys_cal --dataset=DEM --resolution=$resolution 2>> cnn_run.err >> cnn_run.log
+done

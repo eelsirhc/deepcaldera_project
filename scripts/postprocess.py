@@ -11,6 +11,23 @@ import cratertools.metric as metric
 from pyproj import Transformer
 from rasterio.transform import rowcol
 from rasterio.windows import Window, transform as window_transform
+from datetime import datetime
+from pathlib import Path
+
+# Define suffix
+suffix = "postprocessed"
+
+# Get current date and hour
+now = datetime.now()
+timestamp = now.strftime("%Y-%m-%d_%Hh")
+timestamp = "2025-06-19_10h"
+
+# Create directory name
+dirname = f"data/{suffix}_{timestamp}"
+output_directory = Path(dirname)
+
+output_directory.mkdir(parents=True, exist_ok=True)
+
 @click.group()
 def postprocess():
     pass
@@ -58,6 +75,7 @@ def get_files(resolution, negative):
     else:
         directory=Path(data_tld)/"data/predictions/DEM/"
     print(directory)
+
     return sorted(directory.glob("sys_cal_craterdist*npy"))
 
     
@@ -92,7 +110,9 @@ def combine(resolution, negative,output):
     my_craters_DEM['DEM'] = 1
     my_craters_combined = my_craters_DEM
     my_craters_combined = my_craters_combined[["Long","Lat","Diameter (km)", "DEM", "file"]]
-    my_craters_combined.to_csv("mcc.csv")
+
+    my_craters_combined.to_csv(output_directory/f"mcc.csv")
+
     my_craters_combined =  my_craters_combined.dropna()
 
     # Crater filtering
@@ -111,7 +131,7 @@ def combine(resolution, negative,output):
     avg_combined_filtered.drop('ind', axis=1, inplace=True)
     
     avg_combined_filtered.sort_values("duplicates")
-    avg_combined_filtered.to_csv(output)
+    avg_combined_filtered.to_csv(output_directory/output)
 
 #----
 from pathlib import Path
@@ -256,7 +276,7 @@ def cross_section(row, img, src, dim=256):
     #inverse the transform
     inv_transform = ~dst_transform
     
-    angles = [0,45,90,135]
+    angles = [180,225,270,315]#0,45,90,135]
     lines = dict()
     npoints = None
     #lines
@@ -283,7 +303,7 @@ def cross_section(row, img, src, dim=256):
 
         
         lines[ang] = dict(x=points[0],y=points[1],r=radii,
-                          ix=line_points[0], iy=line_points[1],z=line_samples,
+                          ix=line_points[1], iy=line_points[0], z=line_samples,
                           variable=np.std(line_samples),
                          )
     #circles
@@ -338,12 +358,14 @@ def cross_section(row, img, src, dim=256):
 @click.option("--onlymeta",default=False, is_flag=True)
 @click.option("--nofilter",default=False, is_flag=True)
 def segment(filename,low, high, negative, prefix, force, preload, onlymeta, nofilter):
-    source = pd.read_csv(filename, index_col=0)
+    pathfilename = Path(filename)
+    source = pd.read_csv(pathfilename, index_col=0)
 
     #filter to reduce number
     th=10
     if not nofilter: #if nofilter then don't filter!
-        source=source[source.duplicates>(th-np.log2(source["Diameter (km)"]))]
+#       source=source[source.duplicates>(th-np.log2(source["Diameter (km)"]))]
+        source = source[(source.duplicates>=4)]
     else:
         prefix = f"unfiltered_{prefix}"
         
@@ -351,7 +373,7 @@ def segment(filename,low, high, negative, prefix, force, preload, onlymeta, nofi
 
     #load the source file
     if low==0:
-        source.to_csv(str(filename)+"_filtered")
+        source.to_csv(pathfilename.with_suffix(pathfilename.suffix+".filtered"))
     if high==0:
         high=len(source)
     source = source.sort_values("duplicates",ascending=False)
@@ -363,9 +385,9 @@ def segment(filename,low, high, negative, prefix, force, preload, onlymeta, nofi
     _seg = source.iloc[low:high]
     addon = dict()
     if negative:
-        results = Path(f"data/{prefix}/negative")
+        results = output_directory/f"data/{prefix}/negative"
     else:
-        results = Path(f"data/{prefix}/positive")
+        results = output_directory/f"data/{prefix}/positive"
     print(f"Saving to {results}")
     results.mkdir(parents=True, exist_ok=True)
     src = None
@@ -413,9 +435,9 @@ def segment(filename,low, high, negative, prefix, force, preload, onlymeta, nofi
 @click.option("--prefix",default="postprocessed", type=str)
 def final(suffix, negative, skiphdf, nofilter, prefix):
     if nofilter:
-        post = Path(f"data/unfiltered_{prefix}")
+        post = output_directory/f"data/unfiltered_{prefix}"
     else:
-        post = Path(f"data/{prefix}")
+        post = output_directory/f"data/{prefix}"
 
     prefix="positive"
     if negative:
@@ -426,7 +448,7 @@ def final(suffix, negative, skiphdf, nofilter, prefix):
     print(post)
     for g in post.glob("*0.csv"):
         print(g)
-    for p in sorted([g for g in post.glob("*.csv")]):
+    for p in sorted([g for g in post.glob("*00*.csv")]):
         print(p)
         d1.append(pd.read_csv(p,index_col=0))
     df = pd.concat(d1)

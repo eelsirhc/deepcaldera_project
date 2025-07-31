@@ -1,0 +1,8 @@
+resolution=$1
+
+rm -f runfile
+for index in `find $resolution/data/processed -name '*images*' -printf '%P\n' | xargs -I{} basename {} .hdf5 | awk -F_ '{print $4}' | sort -n`
+do
+    echo $index
+    echo "python ./res_predict_model.py make-prediction --index=$index --prefix=sys_cal --dataset=DEM --resolution=$resolution " >> runfile
+done
