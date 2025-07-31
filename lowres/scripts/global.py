@@ -1,3 +1,5 @@
+import sys
+sys.path.append('./')
 # %load start_to_finish.py
 import time
 import deepmars2.post_processing_net.model as ppn

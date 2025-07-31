@@ -281,7 +281,7 @@ def postprocess():
 @postprocess.command()
 @click.option("--resolution", default=None)
 @click.option("--negative",default=False, is_flag=True)
-def list(resolution, negative):
+def file_list(resolution, negative):
     """List the fiels found in the appropriate directory.
         The caldera detection was run with the original DEM (positive) and the locally flipped DEM (negative),
         and runs were generated as 'highres' (1-2 degrees) and lowres (2-30) degrees.
@@ -328,6 +328,9 @@ def combine(resolution, negative,output):
     #remove missing data
     my_craters_combined =  my_craters_combined.dropna()
 
+    if len(my_craters_combined)==0:
+        print("NO DATA")
+        return
     # Crater filtering for duplicates
     my_craters_combined_filtered = metric.rep_filter_unique_craters(my_craters_combined,
                                                                     *cols[:3])[0]
@@ -400,7 +403,7 @@ def segment(filename,low, high, negative, prefix, force, preload, onlymeta, nofi
         high=len(source)
     #load the source file
     source = source.sort_values("duplicates",ascending=False)
-    filename = Path("/mnt/export/lee/1-Projects/deepcaldera/source_data/gebco/gebco_2023_clipped_to_seamounts_proj.tif")
+    filename = Path("source_data/gebco/gebco_2023_clipped_to_seamounts_proj.tif")
 
     count = 0
     _seg = source.iloc[low:high]
