@@ -4,6 +4,9 @@
 Functions for extracting craters from model target predictions and filtering
 out duplicates.
 """
+import sys
+sys.path.append('./')
+
 import click
 import logging
 import deepmars2.features.template_match_target as tmt

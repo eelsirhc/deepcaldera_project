@@ -404,6 +404,7 @@ def segment(filename,low, high, negative, prefix, force, preload, onlymeta, nofi
     #load the source file
     source = source.sort_values("duplicates",ascending=False)
     filename = Path(mapfile)
+#    filename = Path("source_data/gebco/gebco_2023_clipped_to_seamounts_proj.tif")
 
     count = 0
     _seg = source.iloc[low:high]
