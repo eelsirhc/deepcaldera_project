@@ -4,6 +4,8 @@
 Functions for extracting craters from model target predictions and filtering
 out duplicates.
 """
+import sys
+sys.path.append("../")
 import click
 import logging
 import deepmars2.features.template_match_target as tmt
@@ -264,7 +266,8 @@ def long_lat_rad_km_from_pix_geo(coords, box_size, central_lat_lon, dim=256): #l
 #    def fog2(lat_0, lon_0, box_size, src, src_data, dim=256):
     assert coords.min() >= 0 and coords.max() <= 256
     lat_0, lon_0 = central_lat_lon
-
+    if isinstance(box_size, np.ndarray):
+        box_size = box_size[0]
     from rasterio.transform import from_bounds, AffineTransformer
     from rasterio.warp import reproject, Resampling
     import fiona.transform
@@ -276,7 +279,13 @@ def long_lat_rad_km_from_pix_geo(coords, box_size, central_lat_lon, dim=256): #l
     def reproject_coords(src_crs, dst_crs, coords):
         xs = [c[0] for c in coords]
         ys = [c[1] for c in coords]
-        nxs, nys = fiona.transform.transform(src_crs, dst_crs, xs, ys)
+        try:
+            nxs, nys = fiona.transform.transform(src_crs, dst_crs, xs, ys)
+        except TypeError as e:
+            print(e)
+            print(xs,ys)
+            raise
+            
         return [[x,y] for x,y in zip(nxs, nys)]
 
     #get the box limits in lat,lon to ortho
@@ -492,11 +501,12 @@ def cnn_prediction(index, prefix, output_prefix, model, dataset,resolution):
     if output_prefix is None:
         output_prefix = prefix
     # Crater Parameters
+
     if resolution is not None:
         data_tld = os.path.join(cfg.root_dir, resolution)
     else:
         data_tld = cfg.root_dir
-        
+
     CP = dict(
         dim=256,
         datatype=prefix,
@@ -508,7 +518,7 @@ def cnn_prediction(index, prefix, output_prefix, model, dataset,resolution):
             "data/processed/%s_images%s.hdf5" % (prefix, indexstr),
         ),
         dir_preds=os.path.join(
-            cfg.root_dir,
+            data_tld,
             "data/negative_predictions/%s/%s_preds%s.hdf5" % (dataset, output_prefix, indexstr),
         ),
     )

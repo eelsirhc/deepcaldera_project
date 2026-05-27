@@ -263,7 +263,8 @@ def long_lat_rad_km_from_pix_geo(coords, box_size, central_lat_lon, dim=256): #l
 #    def fog2(lat_0, lon_0, box_size, src, src_data, dim=256):
     assert coords.min() >= 0 and coords.max() <= 256
     lat_0, lon_0 = central_lat_lon
-
+    if isinstance(box_size, np.ndarray):
+        box_size = box_size[0]
     from rasterio.transform import from_bounds, AffineTransformer
     from rasterio.warp import reproject, Resampling
     import fiona.transform

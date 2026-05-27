@@ -9,7 +9,9 @@ Steps
 	scripts/res_predict_model.py cnn-prediction --index=X --prefix=sys_cal --dataset=DEM -> process file ending with index X using the DEM data.
 	(this is the fast step, but requires access to the gpu)
 3. merge the csv files into one
-	scripts/postprocess.py combine 
+	scripts/postprocess.py combine
+	#CL - do I run this for negative and postive?
+	
 4. extra the metadata and resample images for the cross-sections
 	python scripts/postprocess.py segment caldera_positive.csv INDEX_LOW INDEX_HIGH --preload --nofilter
 5. done

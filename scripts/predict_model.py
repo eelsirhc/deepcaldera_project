@@ -4,6 +4,8 @@
 Functions for extracting craters from model target predictions and filtering
 out duplicates.
 """
+import sys
+sys.path.append("../")
 import click
 import logging
 import deepmars2.features.template_match_target as tmt
@@ -263,7 +265,8 @@ def long_lat_rad_km_from_pix_geo(coords, box_size, central_lat_lon, dim=256): #l
 #    def fog2(lat_0, lon_0, box_size, src, src_data, dim=256):
     assert coords.min() >= 0 and coords.max() <= 256
     lat_0, lon_0 = central_lat_lon
-
+    if isinstance(box_size, np.ndarray):
+        box_size = box_size[0]
     from rasterio.transform import from_bounds, AffineTransformer
     from rasterio.warp import reproject, Resampling
     import fiona.transform
@@ -280,6 +283,7 @@ def long_lat_rad_km_from_pix_geo(coords, box_size, central_lat_lon, dim=256): #l
 
     #get the box limits in lat,lon to ortho
     #convert from latlong to ortho to find the bounds to build the affine transform
+    
     centre = reproject_coords(latlong, orthographic, [[lon_0, lat_0]])[0]
     top = reproject_coords(latlong, orthographic, [[lon_0, lat_0+box_size/2]])[0]
     bottom = reproject_coords(latlong, orthographic, [[lon_0, lat_0-box_size/2]])[0]
@@ -495,7 +499,7 @@ def cnn_prediction(index, prefix, output_prefix, model, dataset,resolution):
         data_tld = os.path.join(cfg.root_dir, resolution)
     else:
         data_tld = cfg.root_dir
-        
+
     CP = dict(
         dim=256,
         datatype=prefix,
@@ -524,11 +528,13 @@ def cnn_prediction(index, prefix, output_prefix, model, dataset,resolution):
             get_model_preds(CP)
             fcntl.flock(lock, fcntl.LOCK_UN)
         except IOError as err:
+            print(err)
             try_count+=1
             time.sleep(10)
             if try_count>10:
                 raise SystemExit("Unable to obtain lock file: %s" % lockfile)
-    
+        except Exception as e:
+            raise
     
 
     elapsed_time = time.time() - start_time
@@ -553,6 +559,7 @@ def make_prediction(llt2, rt, index, prefix, start, stop, matches, model, datase
     optionally using the precalculated CNN predictions.
 
     """
+    print("making circles")
     logger = logging.getLogger(__name__)
     logger.info("making predictions.")
     start_time = time.time()
