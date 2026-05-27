@@ -1,6 +1,5 @@
 """Postprocess the crater detection algorithm"""
 import os
-os.chdir("/mnt/export/lee/1-Projects/dc2")
 import numpy as np
 import pandas as pd
 import tifffile
@@ -35,10 +34,9 @@ timestamp = "2025-06-19_10h"
 # Create directory name and create the directory
 dirname = f"data/{suffix}_{timestamp}"
 output_directory = Path(dirname)
-
+print(f"Using Directory : {output_directory}")
 output_directory.mkdir(parents=True, exist_ok=True)
-
-
+print(output_directory.exists())
 # ----
 def reproject_coords(src_crs, dst_crs, coords):
     xs = [c[0] for c in coords]

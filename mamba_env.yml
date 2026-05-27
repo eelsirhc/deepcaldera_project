@@ -1,0 +1,47 @@
+name: myenv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+
+  # --- Compiled / system-library packages (conda manages the C deps) ---
+  - cartopy=0.23.0
+  - fiona=1.10.1
+  - numba=0.60.0
+  - pytables=3.9.2
+  - scikit-image=0.24.0
+  - scikit-learn=1.5.0
+  - matplotlib
+  - seaborn=0.13.2
+  - openpyxl=3.1.5
+  - tqdm=4.66.4
+  - python-dotenv=1.0.1
+  - jupyter=1.0.0
+  - pykrige=1.7.2
+  - geocube=0.7.1
+  - geodatasets=2024.8.0
+
+  # --- CUDA runtime (matches TF 2.16.1 requirements) ---
+  - cuda-toolkit=12.5
+  - cudnn=9
+
+  - pip
+  - pip:
+    # --- TensorFlow + TensorRT (NVIDIA/pip only) ---
+    - tensorflow==2.16.1
+    - tensorrt==10.1.0
+    - tensorrt-cu12-bindings==10.1.0
+    - tensorrt-cu12-libs==10.1.0
+
+    # --- OpenCV ---
+    - opencv-python==4.10.0.84
+
+    # --- Pure Python / not on conda-forge ---
+    - fqdn==1.5.1
+    - isoduration==20.11.0
+    - jsonpointer==3.0.0
+    - pip-chill==1.0.3
+    - pip-tools==7.5.0
+    - python-version==0.0.2
+    - uri-template==1.3.0
+    - webcolors==24.6.0
