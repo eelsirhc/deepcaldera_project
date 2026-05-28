@@ -93,7 +93,6 @@ def cross_section(row, img, src, dim=256, row2=None):
 
     ##1. extract the ortho image
     coords = [[lon_0, lat_0]]
-
     mercator = "EPSG:3395"
     latlong = "EPSG:4326"
     orthographic = dict(proj="ortho", lat_0=lat_0, lon_0=lon_0)
@@ -110,7 +109,6 @@ def cross_section(row, img, src, dim=256, row2=None):
     top = (nxs[1], nys[1])
     bottom = (nxs[2], nys[2])
     width = top[1] - bottom[1]
-
     new_left, new_bottom, new_right, new_top = (
         centre[0] - width / 2,
         bottom[1],
@@ -194,7 +192,8 @@ def cross_section(row, img, src, dim=256, row2=None):
     elif src.crs.to_string()=="EPSG:4236" : # PLATE CAREE
         data = img
         src_transform_cropped=src.transform
-
+    else:
+        print("NOT DEFINED DATA", src.crs.to_string())
     dst_data = np.empty((dim, dim), dtype=data.dtype)
         
     try:
@@ -233,7 +232,6 @@ def cross_section(row, img, src, dim=256, row2=None):
     # lines
     rad = diameter_km * 1e3 / 2
     x0, y0 = 0, 0  # in the image coords
-
     def collect_points(points):
         image_points = inv_transform * points
         row_f = np.array(image_points[0], dtype=float)
