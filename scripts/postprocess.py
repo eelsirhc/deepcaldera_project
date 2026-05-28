@@ -28,8 +28,8 @@ suffix = "postprocessed"
 
 # Get current date and hour - used to tag the directory for multiple runs
 now = datetime.now()
-timestamp = now.strftime("%Y-%m-%d_%Hh")
-timestamp = "2025-06-19_10h"
+timestamp = now.strftime("%Y-%m-%d") # this makes a new directory every day, optimistic that you'll finish in one day
+#timestamp = "2025-06-19_10h"
 
 # Create directory name and create the directory
 dirname = f"data/{suffix}_{timestamp}"
@@ -37,8 +37,10 @@ output_directory = Path(dirname)
 print(f"Using Directory : {output_directory}")
 output_directory.mkdir(parents=True, exist_ok=True)
 print(output_directory.exists())
+
 # ----
 def reproject_coords(src_crs, dst_crs, coords):
+    """Reproject a list of coordinates from src_crs to dst_crs using fiona."""
     xs = [c[0] for c in coords]
     ys = [c[1] for c in coords]
     nxs, nys = fiona.transform.transform(src_crs, dst_crs, xs, ys)
@@ -242,9 +244,26 @@ def cross_section(row, img, src, dim=256):
 def get_files(resolution, negative):
     """Collects all of the .npy files from the processed directories.
     
-    resolution can be 'lowres', 'highres', or 'all'.
+    resolution can be 'lowres', 'highres', or 'all'. 
+    This started because I processed 'lowres' first and then added higher resolutions in 'highres', not because the processing is different
     Using 'all' will collect both low and high resolution.
     Returns the sorted list of file names.
+
+    directory structure is expected to be:
+    ./
+    ├── lowres
+    │   ├── data
+    │   │   ├── negative_predictions
+    │   │   │   └── DEM
+    │   │   └── predictions
+    │   │       └── DEM
+    └── highres
+        ├── data
+        │   ├── negative_predictions
+        │   │   └── DEM
+        │   └── predictions
+        │       └── DEM
+    
     """
     if resolution=="all":
         resolutions=["lowres","highres"]
@@ -279,7 +298,7 @@ def postprocess():
 @click.option("--resolution", default=None)
 @click.option("--negative",default=False, is_flag=True)
 def file_list(resolution, negative):
-    """List the fiels found in the appropriate directory.
+    """List the files found in the appropriate directory.
         The caldera detection was run with the original DEM (positive) and the locally flipped DEM (negative),
         and runs were generated as 'highres' (1-2 degrees) and lowres (2-30) degrees.
     """
@@ -370,6 +389,9 @@ def combine(resolution, negative,output):
 def segment(filename,low, high, negative, prefix, force, preload, onlymeta, nofilter,mapfile=None):
     """process a segment of the csv file to resample data, collect cross-sections,
     calculate new metadata about peaks and ridges.
+
+    In theory, this let's you pre-calculate a bunch of metrics and not have to do it each time you plot
+    The trade-off is a lot of pickle files and a lot of processing time up front, but it should be faster to plot and train on the data later.
 
     Args:
         filename (Path): The input file
@@ -496,9 +518,6 @@ def final(suffix, negative, skiphdf, nofilter, prefix):
 
     d1=[]
     print(post)
-    #read each csv file and combine into a larger dataframe
-    #for g in post.glob("*0.csv"):
-    #    print(g)
     for p in sorted([g for g in post.glob("*00*.csv")]):
         print(p)
         d1.append(pd.read_csv(p,index_col=0))
@@ -515,7 +534,7 @@ def final(suffix, negative, skiphdf, nofilter, prefix):
         d=[]
         c=0
         for p in tqdm(df.sort_index().index):
-            fname = post/f"{p}.pkl"#sorted(list(post.glob("*.pkl"))):
+            fname = post/f"{p}.pkl"
             c+=1
             pdata = pickle.load(open(fname,"rb"))
             out[f"feature{p}/ortho"] = pd.DataFrame(pdata["ortho"])

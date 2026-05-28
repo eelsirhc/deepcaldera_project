@@ -3,7 +3,6 @@
 Most of the code is projection code and new postprocessing code
 """
 
-# import cratertools.metric as metric
 # projection tools
 from pyproj import Transformer
 from rasterio.transform import rowcol, from_bounds, AffineTransformer
@@ -25,6 +24,20 @@ import numpy as np
 import pandas as pd
 
 def load_window(src, lon_min, lat_min, lon_max, lat_max):
+    """Loads a window from a rasterio source given a lat/lon bounding box. Checks for intersection and handles edge cases.
+    
+    Args:
+        src (rasterio dataset): the rasterio dataset to read from
+        lon_min (float): minimum longitude of the bounding box
+        lat_min (float): minimum latitude of the bounding box
+        lon_max (float): maximum longitude of the bounding box
+        lat_max (float): maximum latitude of the bounding box
+
+    Returns:
+        window: a rasterio Window object corresponding to the bounding box, 
+        or raises ValueError if the bbox does not intersect the raster or is adjacent without overlap.
+
+    """
     # --- 1. Transform your lat/lon bbox into the raster's CRS ---
     src_bounds = transform_bounds(
         "EPSG:4326", src.crs,
@@ -147,18 +160,16 @@ def cross_section(row, img, src, dim=256, row2=None):
         col_start, col_stop = sorted((max(0, col_start), min(img.shape[1], col_stop)))
 
         # Crop the image more accurately
-#        print(row_start, row_stop, col_start, col_stop)
         data = img[row_start:row_stop, col_start:col_stop]
         window = Window(col_start, row_start, col_stop - col_start, row_stop - row_start)
         src_transform_cropped = window_transform(window, src.transform)
         dst_data = np.empty((dim, dim), dtype=data.dtype)
     elif src.crs.to_string()=="ESRI:54034":
- #       print("54035")
+ 
         lon_min, lon_max = lon_0 - box_size / 2,lon_0 + box_size / 2
         lat_min, lat_max =  lat_0 - box_size / 2, lat_0 + box_size / 2
 
         src_crs = src.crs
-#        print("transform")
         src_bounds = transform_bounds("EPSG:4326", src_crs, lon_min, lat_min, lon_max, lat_max)
 
         try:
@@ -170,25 +181,18 @@ def cross_section(row, img, src, dim=256, row2=None):
                 return None,None,None,None,None,1,None
             else:
                 return None,None,None,None,None,1
-#            return None, False
-        
-#        print("window")
         if window is None:
             print("WINDOW IS NONE?", lon_min, lat_min, lon_max, lat_max)
             if row2 is not None:
                 return None,None,None,None,None,1,None
             else:
                 return None,None,None,None,None,1
-#        print("window2?")
         window = window_from_bounds(*src_bounds, src.transform)
-#        print("window3?")
         window = window.intersection(
             Window(0, 0, src.width, src.height)
         )
-#        print("read data: " )
         data = src.read(window=window)                    # shape: (bands, rows, cols)
         src_transform_cropped = src.window_transform(window)      # <-- correct origin for this window
-#        print("almost in ortho")
     elif src.crs.to_string()=="EPSG:4236" : # PLATE CAREE
         data = img
         src_transform_cropped=src.transform
@@ -216,17 +220,12 @@ def cross_section(row, img, src, dim=256, row2=None):
             dst_crs=orthographic,
             resampling=Resampling.nearest,
         )
-#    print("DONE TRANSFORM")
-    #
-    #
     #    #Now make circles on the data
     tr = AffineTransformer(dst_transform)
-    # samples
-
     # inverse the transform
     inv_transform = ~dst_transform
 
-    angles = [180, 225, 270, 315]  # 0,45,90,135]
+    angles = [180, 225, 270, 315]  # angles to sample/draw the lines
     lines = dict()
     npoints = None
     # lines
@@ -255,10 +254,12 @@ def cross_section(row, img, src, dim=256, row2=None):
         return np.array(image_points), image_samples
 
     def safe_mean(z):
+        """Calculate the mean of z while ignoring non-finite values. Returns NaN if no finite values are present."""
         v = z[np.isfinite(z)]
         return float(np.mean(v)) if len(v) > 0 else np.nan
 
     def safe_std(z):
+        """Calculate the standard deviation of z while ignoring non-finite values. Returns NaN if no finite values are present."""
         v = z[np.isfinite(z)]
         if len(v) <= 1:
             #print(f"  safe_std WARNING: only {len(v)} finite values in '{label}'")
@@ -266,20 +267,17 @@ def cross_section(row, img, src, dim=256, row2=None):
     
         return float(np.std(v)) if len(v) > 0 else np.nan
 
-
+    # If you're lost, me too. We're still in cross_section
     for ang in angles:
         updown = 0
         peaked = False
-#        print("what")
         ath = np.deg2rad(ang)
         if npoints is None:
             npoints = 64
         radii = np.linspace(-rad * 2, rad * 2, npoints)
         # sample points
         points = x0 + radii * np.cos(ath), y0 + radii * np.sin(ath)
-#        print("collect points")
         line_points, line_samples = collect_points(points)
-#        print("done")
         lines[ang] = dict(
             x=points[0],
             y=points[1],
@@ -306,8 +304,6 @@ def cross_section(row, img, src, dim=256, row2=None):
     if row2 is not None:
         inner_circles=dict()
         x0,y0 = transformer.transform([row2.Long],[row2.Lat])
-#        print(row2.Long, row2.Lat, row.Long,row.Lat)
-#        print(x0,y0)
         # x0,y0 = dst_transform * loc_ortho
         for circrad in [0.1,0.75,1.0,1.25]:
             Circpoints = np.linspace(0,2*np.pi,npoints)

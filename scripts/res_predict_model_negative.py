@@ -3,6 +3,11 @@
 
 Functions for extracting craters from model target predictions and filtering
 out duplicates.
+
+This "negative" version does the trivial thing of flipping the sign of the input data
+so that the 'crater' finder can search for negative craters instead of positive ones.
+
+This should find mounds instead of craters to find the outer edge of the caldera.  
 """
 import sys
 sys.path.append("../")
@@ -74,6 +79,9 @@ def get_model_preds(CP):
     }
     data.close()
     
+    #THIS IS THE MAIN CHANGE FROM THE original deepmars2 code, 
+    #find the maximum in each image and subtract the image from that to flip it
+    #images are already nan filtered so very big numbers representing masks are not a problem
     def preprocess(Data):
         for key in Data:
             if len(Data[key][0]) == 0:
@@ -82,6 +90,7 @@ def get_model_preds(CP):
                 newdim = list(Data[key][i].shape) + [1]
                 d = Data[key][i].max(axis=0) - Data[key][i]
                 Data[key][i] = d.reshape(*newdim)
+    #silly right? but we don't need to reproject all the images just to flip them.
 
     preprocess(Data)
 
