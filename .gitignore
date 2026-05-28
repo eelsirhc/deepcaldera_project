@@ -2,6 +2,7 @@ lowres/data
 highres/data
 data/ResUNET
 data/postprocessed*
+data/processed
 
 source_data
 pdfs/*
