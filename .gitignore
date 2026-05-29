@@ -3,7 +3,7 @@ highres/data
 data/ResUNET
 data/postprocessed*
 data/processed
-
+data/predictions
 source_data
 pdfs/*
 tilde/*
