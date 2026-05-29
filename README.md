@@ -26,11 +26,8 @@ Running
 	scripts/res_predict_model.py make-prediction --index=X --prefix=sys_cal --dataset=DEM -> process file ending with index X using the DEM data.
 	(this is the fast step, but requires access to the gpu)
 3. merge the csv files into one
-	scripts/postprocess.py combine
-	#CL - do I run this for negative and postive?
-4. merge the csv files into one
 	scripts/postprocess.py combine 
-5. extra the metadata and resample images for the cross-sections
+4. extra the metadata and resample images for the cross-sections
 	python scripts/postprocess.py segment caldera_positive.csv INDEX_LOW INDEX_HIGH --preload --nofilter
-6. finally combine the data
+5. finally combine the data
        python scripts/postprocess.py final --nofilter
